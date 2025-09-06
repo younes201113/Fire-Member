@@ -16,7 +16,7 @@
     "express-session": "^1.17.3",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
-    "st.db": "^6.4.0"
+    "st.db": "^6.3.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
