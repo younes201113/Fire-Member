@@ -17,6 +17,7 @@
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
     "quick.db": "^9.0.8"
+    "better-sqlite3": "^9.4.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
