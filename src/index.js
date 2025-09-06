@@ -25,8 +25,9 @@ app.use(session({
 }));
 
 // === DBs ===
-const users = new QuickDB({ filePath: path.join(__dirname, '..', 'data', 'users.sqlite') });
-const purchases = new QuickDB({ filePath: path.join(__dirname, '..', 'data', 'purchases.sqlite') });
+const { QuickDB } = require('quick.db');
+const users = new QuickDB();
+const purchases = new QuickDB();
 
 // === Discord client ===
 const client = new Client({
