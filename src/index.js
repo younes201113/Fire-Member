@@ -4,8 +4,24 @@ const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
-const { Client, GatewayIntentBits, Partials, Routes, REST, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField } = require('discord.js');
-const { QuickDB } = require('st.db');
+const {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  Routes,
+  REST,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ChannelType,
+  PermissionsBitField
+} = require('discord.js');
+
+const { QuickDB } = require('quick.db'); // ✅ استخدمنا quick.db
 const config = require('./config.js');
 
 // === Basic guards ===
@@ -25,13 +41,17 @@ app.use(session({
 }));
 
 // === DBs ===
-const { QuickDB } = require('quick.db');
 const users = new QuickDB();
 const purchases = new QuickDB();
 
 // === Discord client ===
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers
+  ],
   partials: [Partials.Channel, Partials.GuildMember, Partials.User]
 });
 
@@ -45,7 +65,7 @@ passport.use(new DiscordStrategy({
   callbackURL: `${config.web.baseUrl}/auth/callback`,
   scope: ['identify', 'guilds']
 }, async (accessToken, refreshToken, profile, done) => {
-  // Store minimal profile (no auto-join, compliant usage)
+  // Store minimal profile
   await users.set(profile.id, {
     id: profile.id,
     username: profile.username,
@@ -63,7 +83,6 @@ app.use(passport.session());
 app.get('/', (req, res) => res.render('index', { user: req.user, config }));
 app.get('/auth/login', passport.authenticate('discord'));
 app.get('/auth/callback', passport.authenticate('discord', { failureRedirect: '/' }), async (req, res) => {
-  // Give verified role if the user is in the guild
   try {
     const guild = await client.guilds.fetch(config.bot.guildId);
     const member = await guild.members.fetch(req.user.id).catch(() => null);
@@ -85,7 +104,11 @@ async function registerCommands() {
   const rest = new REST({ version: '10' }).setToken(config.bot.token);
   const body = [
     { name: 'setup', description: 'إرسال بانل الشراء/التحقق' },
-    { name: 'tax', description: 'حسبة ضريبة بروبوت + وسيط', options: [{ name: 'amount', description: 'المبلغ (مثال 10000)', type: 4, required: true }] }
+    {
+      name: 'tax',
+      description: 'حسبة ضريبة بروبوت + وسيط',
+      options: [{ name: 'amount', description: 'المبلغ (مثال 10000)', type: 4, required: true }]
+    }
   ];
   await rest.put(Routes.applicationCommands(config.bot.clientId), { body });
   console.log('✅ Slash commands registered');
@@ -112,8 +135,7 @@ client.on('interactionCreate', async (interaction) => {
         const embed = new EmbedBuilder()
           .setColor(0x2f3136)
           .setTitle('خدمة موثقة ومطابقة لقوانين ديسكورد')
-          .setDescription('تحقق من حسابك ثم افتح تذكرة لشراء **أدوار/خدمات داخل السيرفر**.
-> لا نقوم ببيع أعضاء أو إدخال قسري.')
+          .setDescription('تحقق من حسابك ثم افتح تذكرة لشراء **أدوار/خدمات داخل السيرفر**.\n> لا نقوم ببيع أعضاء أو إدخال قسري.')
           .setFooter({ text: interaction.guild.name })
           .setTimestamp();
 
@@ -149,7 +171,7 @@ client.on('interactionCreate', async (interaction) => {
       if (interaction.customId === 'open_ticket') {
         const categoryId = config.bot.categoryId;
         const category = categoryId ? interaction.guild.channels.cache.get(categoryId) : null;
-        if (!category || category.type !== 4) { // 4 = GuildCategory
+        if (!category || category.type !== 4) {
           return interaction.reply({ content: '❌ لم يتم العثور على كاتيجوري صالح في الإعدادات.', ephemeral: true });
         }
 
@@ -219,7 +241,6 @@ client.on('interactionCreate', async (interaction) => {
         return interaction.reply({ content: '❌ سعر غير صالح.', ephemeral: true });
       }
 
-      // Store a pending purchase (mock)
       const id = `${interaction.user.id}-${Date.now()}`;
       await purchases.set(id, { userId: interaction.user.id, roleId, price, status: 'pending' });
 
